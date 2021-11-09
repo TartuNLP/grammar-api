@@ -1,4 +1,5 @@
 import logging
+import json
 from asyncio import AbstractEventLoop
 
 from aio_pika import connect, ExchangeType, Message, IncomingMessage
@@ -37,12 +38,14 @@ class MQConnector:
         self.exchange = await self.channel.declare_exchange(self.exchange_name, ExchangeType.DIRECT)
         self.callback_queue = await self.channel.declare_queue(exclusive=True)
 
+        await self.callback_queue.consume(self.on_response)
+
     async def disconnect(self):
         await self.connection.close()
 
     def on_response(self, message: IncomingMessage):
         future = self.futures.pop(message.correlation_id)
-        future.set_result(message.body)
+        future.set_result(json.loads(message.body))
 
     async def publish_request(self, correlation_id: str, body: BaseModel, language: str):
         """
@@ -63,4 +66,5 @@ class MQConnector:
         )
 
         response = await future
+
         return response

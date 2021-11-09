@@ -12,8 +12,8 @@ ENV PYTHONIOENCODING=utf-8
 WORKDIR /app
 
 RUN adduser -D app && \
-    chown -R app:app /app && \
-    chown -R app:app /app/data
+    chown -R app:app /app
+
 USER app
 ENV PATH="/home/app/.local/bin:${PATH}"
 
