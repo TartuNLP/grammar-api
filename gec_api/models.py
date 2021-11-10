@@ -15,6 +15,9 @@ class Span(BaseModel):
     end: int = Field(...,
                      description="Span end character index.",
                      example=6)
+    value: str = Field(...,
+                       description="Span value in original text.",
+                       example="Aitähh")
 
 
 class Replacement(BaseModel):
@@ -44,3 +47,6 @@ class GECRequest(BaseModel):
 class GECResult(BaseModel):
     corrections: List[Correction] = Field(...,
                                           description="List of suggested corrections.")
+    corrected_text: str = Field(...,
+                                description="Suggested value for the corrected output.",
+                                example="Aitäh!")

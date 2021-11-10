@@ -4,9 +4,9 @@ import uuid
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from gec_service.models import GECResult, GECRequest
-from gec_service.mq_connector import MQConnector
-from gec_service import settings
+from gec_api.models import GECResult, GECRequest
+from gec_api.mq_connector import MQConnector
+from gec_api import settings
 
 app = FastAPI(
     title="Grammatical Error Correction",
