@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import uuid
 
 from fastapi import FastAPI
@@ -8,8 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from gec_service.models import GECResult, GECRequest
 from gec_service.mq_connector import MQConnector
 from gec_service import settings
-
-logger = logging.getLogger("uvicorn.error")
 
 app = FastAPI(
     title="Grammatical Error Correction",
