@@ -17,13 +17,13 @@ class Span(BaseModel):
                      example=6)
     value: str = Field(...,
                        description="Span value in original text.",
-                       example="Aitähh")
+                       example="Aitähh!")
 
 
 class Replacement(BaseModel):
     value: Optional[str] = Field(None,
                                  description="Suggested replacement text, null in case the span should be deleted.",
-                                 example="Aitäh")
+                                 example="Aitäh!")
 
 
 class Correction(BaseModel):
@@ -48,5 +48,6 @@ class GECResult(BaseModel):
     corrections: List[Correction] = Field(...,
                                           description="List of suggested corrections.")
     corrected_text: str = Field(...,
-                                description="Suggested value for the corrected output.",
+                                description="[DEPRECATED] Suggested value for the correct output. "
+                                            "This value will be deprecated in future releases.",
                                 example="Aitäh!")

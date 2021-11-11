@@ -43,7 +43,7 @@ async def shutdown():
 
 # TODO content limit?
 @app.post('/', response_model=GECResult, description="Submit a GEC request.")
-async def gram_check(body: GECRequest):
+async def grammar(body: GECRequest):
     correlation_id = str(uuid.uuid4())
     result = await mq_connector.publish_request(correlation_id, body, body.language)
     return result

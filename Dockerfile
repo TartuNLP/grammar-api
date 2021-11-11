@@ -10,6 +10,7 @@ RUN apk update && \
 
 ENV PYTHONIOENCODING=utf-8
 ENV CONFIGURATION=production
+ENV ROOT_PATH=""
 WORKDIR /app
 
 RUN adduser -D app && \
@@ -29,9 +30,9 @@ EXPOSE 80
 RUN echo \
     "if [ \$CONFIGURATION == \"debug\" ]; \
     then \
-      uvicorn app:app --host 0.0.0.0 --port 80 --log-config config/logging.debug.ini --proxy-headers; \
+      uvicorn app:app --host 0.0.0.0 --port 80 --root-path \$ROOT_PATH --log-config config/logging.debug.ini --proxy-headers; \
     else \
-      uvicorn app:app --host 0.0.0.0 --port 80 --log-config config/logging.ini --proxy-headers; \
+      uvicorn app:app --host 0.0.0.0 --port 80 --root-path \$ROOT_PATH --log-config config/logging.ini --proxy-headers; \
     fi" > entrypoint.sh
 
 ENTRYPOINT ["/bin/sh", "entrypoint.sh"]
