@@ -43,11 +43,13 @@ class MQConnector:
         await self.callback_queue.consume(self.on_response)
 
     async def disconnect(self):
+        await self.callback_queue.delete()
         await self.connection.close()
 
     def on_response(self, message: IncomingMessage):
         LOGGER.info(f"Received response for request: {{id: {message.correlation_id}}}")
         future = self.futures.pop(message.correlation_id)
+        message.ack()
         future.set_result(json.loads(message.body))
         LOGGER.debug(f"Response for {message.correlation_id}: {json.loads(message.body)}")
 
@@ -59,18 +61,24 @@ class MQConnector:
         self.futures[correlation_id] = future
 
         body = body.json().encode()
-        await self.exchange.publish(
-            Message(
-                body,
-                correlation_id=correlation_id,
-                expiration=self.message_timeout,
-                reply_to=self.callback_queue.name
-            ),
-            routing_key=f"{self.exchange_name}.{language}"
+        message = Message(
+            body,
+            content_type='application/json',
+            correlation_id=correlation_id,
+            expiration=self.message_timeout,
+            reply_to=self.callback_queue.name
         )
+
+        try:
+            await self.exchange.publish(message, routing_key=f"{self.exchange_name}.{language}")
+        except Exception as e:
+            LOGGER.exception(e)
+            LOGGER.info("Attempting to restore the channel.")
+            await self.channel.reopen()
+            await self.exchange.publish(message, routing_key=f"{self.exchange_name}.{language}")
+
         LOGGER.info(f"Sent request: {{id: {correlation_id}, routing_key: {self.exchange_name}.{language}}}")
         LOGGER.debug(f"Request {correlation_id} content: {{id: {correlation_id}}}")
-
-        response = await future
+        response = await future  # TODO handle timeouts
 
         return response
