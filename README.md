@@ -15,10 +15,12 @@ The following environment variables should be specified when running the contain
 - `MQ_HOST` - RabbitMQ host
 - `MQ_PORT` (optional) - RabbitMQ port (`5672` by default)
 - `MQ_TIMEOUT` (optional) - Message timeout in seconds (`30` by default)
+- `ENDPOINT_PATH` - the endpoint path prefix if the API is deployed on a non-root path. For example,
+  if `www.example.com/grammar` is used, the value should be `/grammar`.
 - `CONFIGURATION` (optional) - if value is `debug` logging will be more detailed, this value should not be used in
   production environments where user input should not be logged.
 
-The service is available on port `80`. The API documentation is available under the `\docs` endpoint.
+The service is available on port `80`. The API documentation is available under the `/docs` endpoint.
 
 The RabbitMQ connection parameters are set with environment variables. Exchange name `grammar` will be used and requests
 will be sent to the worker using the routing key `grammar.{lang}` where `{lang}` refers to the 2-letter ISO langauge
