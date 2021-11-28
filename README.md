@@ -14,8 +14,9 @@ The following environment variables should be specified when running the contain
 - `MQ_PASSWORD` - RabbitMQ user password
 - `MQ_HOST` - RabbitMQ host
 - `MQ_PORT` (optional) - RabbitMQ port (`5672` by default)
-- `MQ_TIMEOUT` (optional) - Message timeout in seconds (`30` by default)
-- `ENDPOINT_PATH` - the endpoint path prefix if the API is deployed on a non-root path. For example,
+- `MQ_TIMEOUT` (optional) - Message timeout in milliseconds (`300000` by default)
+- `MQ_EXCHANGE` (optional) - RabbitMQ exchange name (`grammar` by default)
+- `ENDPOINT_PATH` (optional) - the endpoint path prefix if the API is deployed on a non-root path. For example,
   if `www.example.com/grammar` is used, the value should be `/grammar`.
 - `CONFIGURATION` (optional) - if value is `debug` logging will be more detailed, this value should not be used in
   production environments where user input should not be logged.

@@ -1,0 +1,4 @@
+aio-pika==6.8.0
+fastapi==0.70.0
+uvicorn==0.15.0
+pydantic~=1.8.2

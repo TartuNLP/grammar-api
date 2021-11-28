@@ -1,11 +1,7 @@
 from typing import List, Optional
-from enum import Enum
 
 from pydantic import BaseModel, Field
-
-
-class Language(str, Enum):
-    estonian = "et"
+from . import Language
 
 
 class Span(BaseModel):

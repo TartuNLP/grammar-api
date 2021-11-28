@@ -1,43 +1,34 @@
 import logging
+import asyncio
 import json
-from asyncio import AbstractEventLoop
 
-from aio_pika import ExchangeType, Message, IncomingMessage, connect_robust
 from pydantic import BaseModel
+from aio_pika import ExchangeType, Message, IncomingMessage, connect_robust
+
+from app import mq_settings
 
 LOGGER = logging.getLogger(__name__)
 
 
 class MQConnector:
-    def __init__(self, host: str, port: int, username: str, password: str, exchange_name: str, message_timeout: int,
-                 loop: AbstractEventLoop):
-        """
-        Initializes a RabbitMQ connector class used for publishing requests using the relevant routing key and
-        receiving a response.
-        """
-        self._host = host
-        self._port = port
-        self._username = username
-        self._password = password
-        self.message_timeout = message_timeout
-        self.exchange_name = exchange_name
-
+    def __init__(self):
         self.futures = {}
-        self.loop = loop
+        self.loop = asyncio.get_running_loop()
 
         self.connection = None
         self.channel = None
         self.exchange = None
-
         self.callback_queue = None
 
     async def connect(self):
-        self.connection = await connect_robust(host=self._host,
-                                               port=self._port,
-                                               login=self._username,
-                                               password=self._password)
+        self.connection = await connect_robust(
+            host=mq_settings.host,
+            port=mq_settings.port,
+            login=mq_settings.username,
+            password=mq_settings.password
+        )
         self.channel = await self.connection.channel()
-        self.exchange = await self.channel.declare_exchange(self.exchange_name, ExchangeType.DIRECT)
+        self.exchange = await self.channel.declare_exchange(mq_settings.exchange, ExchangeType.DIRECT)
         self.callback_queue = await self.channel.declare_queue(exclusive=True)
 
         await self.callback_queue.consume(self.on_response)
@@ -48,6 +39,7 @@ class MQConnector:
 
     def on_response(self, message: IncomingMessage):
         LOGGER.info(f"Received response for request: {{id: {message.correlation_id}}}")
+
         future = self.futures.pop(message.correlation_id)
         message.ack()
         future.set_result(json.loads(message.body))
@@ -65,20 +57,23 @@ class MQConnector:
             body,
             content_type='application/json',
             correlation_id=correlation_id,
-            expiration=self.message_timeout,
+            expiration=mq_settings.timeout,
             reply_to=self.callback_queue.name
         )
 
         try:
-            await self.exchange.publish(message, routing_key=f"{self.exchange_name}.{language}")
+            await self.exchange.publish(message, routing_key=f"{mq_settings.exchange}.{language}")
         except Exception as e:
             LOGGER.exception(e)
             LOGGER.info("Attempting to restore the channel.")
             await self.channel.reopen()
-            await self.exchange.publish(message, routing_key=f"{self.exchange_name}.{language}")
+            await self.exchange.publish(message, routing_key=f"{mq_settings.exchange}.{language}")
 
-        LOGGER.info(f"Sent request: {{id: {correlation_id}, routing_key: {self.exchange_name}.{language}}}")
+        LOGGER.info(f"Sent request: {{id: {correlation_id}, routing_key: {mq_settings.exchange}.{language}}}")
         LOGGER.debug(f"Request {correlation_id} content: {{id: {correlation_id}}}")
         response = await future  # TODO handle timeouts
 
         return response
+
+
+mq_connector = MQConnector()

@@ -11,6 +11,8 @@ RUN apk update && \
 ENV PYTHONIOENCODING=utf-8
 ENV CONFIGURATION=production
 ENV ENDPOINT_PATH=""
+ARG VERSION
+ENV VERSION=$VERSION
 WORKDIR /app
 
 RUN adduser -D app && \
@@ -19,7 +21,7 @@ RUN adduser -D app && \
 USER app
 ENV PATH="/home/app/.local/bin:${PATH}"
 
-COPY --chown=app:app config/requirements.txt .
+COPY --chown=app:app requirements.txt .
 RUN pip install --user -r requirements.txt && \
     rm requirements.txt
 
