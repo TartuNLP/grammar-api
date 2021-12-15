@@ -16,10 +16,12 @@ The following environment variables should be specified when running the contain
 - `MQ_PORT` (optional) - RabbitMQ port (`5672` by default)
 - `MQ_TIMEOUT` (optional) - Message timeout in milliseconds (`300000` by default)
 - `MQ_EXCHANGE` (optional) - RabbitMQ exchange name (`grammar` by default)
-- `ENDPOINT_PATH` (optional) - the endpoint path prefix if the API is deployed on a non-root path. For example,
-  if `www.example.com/grammar` is used, the value should be `/grammar`.
-- `CONFIGURATION` (optional) - if value is `debug` logging will be more detailed, this value should not be used in
-  production environments where user input should not be logged.
+
+The entrypoint of the container is `["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers"]`. The
+default `CMD` is used to define logging configuration `["--log-config", "logging/logging.ini"]` which can be potentially
+overridden to define different [Uvicorn parameters](https://www.uvicorn.org/deployment/). For
+example, `["--log-config", "logging/debug.ini", "--root-path", "/api/grammar"]`
+enables debug logging and allows the API to be deployed to the non-root path `/api/grammar`.
 
 The service is available on port `80`. The API documentation is available under the `/docs` endpoint.
 
@@ -33,7 +35,7 @@ The setup can be tested with the following sample `docker-compose.yml` configura
 version: '3'
 services:
   rabbitmq:
-    image: 'rabbitmq:3.6-alpine'
+    image: 'rabbitmq:3.9-alpine'
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}

@@ -9,8 +9,6 @@ RUN apk update && \
         git
 
 ENV PYTHONIOENCODING=utf-8
-ENV CONFIGURATION=production
-ENV ENDPOINT_PATH=""
 WORKDIR /app
 
 RUN adduser -D app && \
