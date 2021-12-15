@@ -1,4 +1,4 @@
-FROM python:3.8-alpine
+FROM python:3.10-alpine
 
 # Install system dependencies
 RUN apk update && \
@@ -11,8 +11,6 @@ RUN apk update && \
 ENV PYTHONIOENCODING=utf-8
 ENV CONFIGURATION=production
 ENV ENDPOINT_PATH=""
-ARG VERSION
-ENV VERSION=$VERSION
 WORKDIR /app
 
 RUN adduser -D app && \
@@ -29,4 +27,5 @@ COPY --chown=app:app . .
 
 EXPOSE 80
 
-ENTRYPOINT ["/bin/sh", "entrypoint.sh"]
+ENTRYPOINT ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers"]
+CMD ["--log-config", "logging/logging.ini"]

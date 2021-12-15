@@ -6,7 +6,7 @@ from app.api import gec_router
 
 app = FastAPI(
     title="Grammatical Error Correction",
-    version="0.1.1",
+    version="1.0.0",
     description="A service that performs automatic grammatical error correction."
 )
 
