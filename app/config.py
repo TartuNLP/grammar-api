@@ -1,4 +1,4 @@
-from pydantic import BaseSettings
+from pydantic import BaseSettings, validator
 
 
 class MQSettings(BaseSettings):
@@ -15,6 +15,11 @@ class MQSettings(BaseSettings):
 
 class APISettings(BaseSettings):
     max_input_length: int = 10000
+    languages: str = "et"  # comma-separated list of 2-letter codes
+
+    @validator('languages')
+    def list_languages(cls, v):
+        return v.split(',')
 
     class Config:
         env_prefix = 'api_'

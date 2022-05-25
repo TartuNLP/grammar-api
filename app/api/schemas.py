@@ -1,9 +1,8 @@
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 from app import api_settings
-from . import Language
 
 
 class Span(BaseModel):
@@ -35,12 +34,18 @@ class Correction(BaseModel):
 
 
 class GECRequest(BaseModel):
-    language: Language = Field(Language.estonian,
-                               description="Input language ISO 2-letter code.")
+    language: str = Field(api_settings.languages[0],
+                          description="Input language ISO 2-letter code.")
     text: str = Field(...,
                       description="Original text input. May contain multiple sentences.",
                       example="Aitähh!",
                       max_length=api_settings.max_input_length)
+
+    @validator('language')
+    def validate_language(cls, v):
+        if v not in api_settings.languages:
+            raise ValueError(f"Unsupported language '{v}'.")
+        return v
 
 
 class GECResult(BaseModel):

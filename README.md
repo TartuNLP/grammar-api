@@ -17,12 +17,15 @@ The following environment variables should be specified when running the contain
 - `MQ_TIMEOUT` (optional) - Message timeout in milliseconds (`300000` by default)
 - `MQ_EXCHANGE` (optional) - RabbitMQ exchange name (`grammar` by default)
 - `API_MAX_INPUT_LENGTH` (optional) - Maximum request size in character (`10000` by default)
+- `API_LANGUAGES` (optional) - a comma-separated list of supported language using 2-letter language codes (`et` by
+  default)
 
-The entrypoint of the container is `["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers"]`. The
-default `CMD` is used to define logging configuration `["--log-config", "logging/logging.ini"]` which can be potentially
-overridden to define different [Uvicorn parameters](https://www.uvicorn.org/deployment/). For
+The entrypoint of the container
+is `["uvicorn", "app:app", "--host", "0.0.0.0", "--proxy-headers", "--log-config", "logging/logging.ini"]`. `CMD` can be
+used to define additional [Uvicorn parameters](https://www.uvicorn.org/deployment/). For
 example, `["--log-config", "logging/debug.ini", "--root-path", "/api/grammar"]`
-enables debug logging and allows the API to be deployed to the non-root path `/api/grammar`.
+enables debug logging (as the last `--log-config` flag is used) and allows the API to be deployed to the non-root
+path `/api/grammar`.
 
 The service is available on port `8000`. The API documentation is available under the `/docs` endpoint.
 

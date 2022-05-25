@@ -24,5 +24,4 @@ COPY --chown=app:app . .
 
 EXPOSE 8000
 
-ENTRYPOINT ["uvicorn", "app:app", "--host", "0.0.0.0", "--proxy-headers"]
-CMD ["--log-config", "logging/logging.ini"]
+ENTRYPOINT ["uvicorn", "app:app", "--host", "0.0.0.0", "--proxy-headers", "--log-config", "logging/logging.ini"]
