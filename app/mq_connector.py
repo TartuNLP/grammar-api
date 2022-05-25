@@ -46,7 +46,7 @@ class MQConnector:
         await self.callback_queue.delete()
         await self.connection.close()
 
-    def on_response(self, message: AbstractIncomingMessage):
+    async def on_response(self, message: AbstractIncomingMessage):
         if message.correlation_id in self.futures:
             LOGGER.info(f"Received response for request: {{id: {message.correlation_id}}}")
             future = self.futures.pop(message.correlation_id)
@@ -54,7 +54,7 @@ class MQConnector:
             LOGGER.debug(f"Response for {message.correlation_id}: {json.loads(message.body)}")
         else:
             LOGGER.warning(f"Response received after message timeout: {{id: {message.correlation_id}}}")
-        message.ack()
+        await message.ack()
 
     async def publish_request(self, body: BaseModel, language: str):
         """

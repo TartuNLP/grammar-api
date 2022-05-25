@@ -35,7 +35,7 @@ code (for example `grammar.et`).
 
 The setup can be tested with the following sample `docker-compose.yml` configuration:
 
-```
+```yaml
 version: '3'
 services:
   rabbitmq:
@@ -56,6 +56,7 @@ services:
       - rabbitmq
   grammar_worker:
     image: ghcr.io/tartunlp/grammar-worker:latest
+    environment:
       - MQ_HOST=rabbitmq
       - MQ_PORT=5672
       - MQ_USERNAME=${RABBITMQ_USER}
