@@ -11,8 +11,7 @@ RUN apk update && \
 ENV PYTHONIOENCODING=utf-8
 WORKDIR /app
 
-RUN adduser -D app && \
-    chown -R app:app /app
+RUN addgroup -S app && adduser -S -D -G app app && chown -R app:app /app
 
 USER app
 ENV PATH="/home/app/.local/bin:${PATH}"
@@ -23,7 +22,7 @@ RUN pip install --user -r requirements.txt && \
 
 COPY --chown=app:app . .
 
-EXPOSE 80
+EXPOSE 8000
 
-ENTRYPOINT ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers"]
+ENTRYPOINT ["uvicorn", "app:app", "--host", "0.0.0.0", "--proxy-headers"]
 CMD ["--log-config", "logging/logging.ini"]

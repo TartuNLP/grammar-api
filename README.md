@@ -24,7 +24,7 @@ overridden to define different [Uvicorn parameters](https://www.uvicorn.org/depl
 example, `["--log-config", "logging/debug.ini", "--root-path", "/api/grammar"]`
 enables debug logging and allows the API to be deployed to the non-root path `/api/grammar`.
 
-The service is available on port `80`. The API documentation is available under the `/docs` endpoint.
+The service is available on port `8000`. The API documentation is available under the `/docs` endpoint.
 
 The RabbitMQ connection parameters are set with environment variables. Exchange name `grammar` will be used and requests
 will be sent to the worker using the routing key `grammar.{lang}` where `{lang}` refers to the 2-letter ISO langauge
@@ -48,7 +48,7 @@ services:
       - MQ_USERNAME=${RABBITMQ_USER}
       - MQ_PASSWORD=${RABBITMQ_PASS}
     ports:
-      - '80:80'
+      - '80:8000'
     depends_on:
       - rabbitmq
   grammar_worker:
