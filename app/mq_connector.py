@@ -1,3 +1,5 @@
+import uuid
+import os
 import logging
 import asyncio
 import json
@@ -8,6 +10,11 @@ from aio_pika import ExchangeType, Message, IncomingMessage, connect_robust
 from app import mq_settings
 
 LOGGER = logging.getLogger(__name__)
+
+
+def uuid4():
+    """Cryptographycally secure UUID generator."""
+    return uuid.UUID(bytes=os.urandom(16), version=4)
 
 
 class MQConnector:
@@ -45,10 +52,11 @@ class MQConnector:
         future.set_result(json.loads(message.body))
         LOGGER.debug(f"Response for {message.correlation_id}: {json.loads(message.body)}")
 
-    async def publish_request(self, correlation_id: str, body: BaseModel, language: str):
+    async def publish_request(self, body: BaseModel, language: str):
         """
         Publishes the request to RabbitMQ.
         """
+        correlation_id = str(uuid4())
         future = self.loop.create_future()
         self.futures[correlation_id] = future
 

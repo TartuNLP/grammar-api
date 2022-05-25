@@ -6,7 +6,7 @@ An API for using the grammatical error correction (GEC) service.
 
 The API can be deployed using the docker image published alongside the repository. Each image version correlates to a
 specific release. The API is designed to work together with our
-[GEC worker](https://github.com/TartuNLP/grammar-worker) worker containers and a RabbitMQ message broker.
+[GEC worker](https://github.com/TartuNLP/grammar-worker) containers and a RabbitMQ message broker.
 
 The following environment variables should be specified when running the container:
 
@@ -16,6 +16,7 @@ The following environment variables should be specified when running the contain
 - `MQ_PORT` (optional) - RabbitMQ port (`5672` by default)
 - `MQ_TIMEOUT` (optional) - Message timeout in milliseconds (`300000` by default)
 - `MQ_EXCHANGE` (optional) - RabbitMQ exchange name (`grammar` by default)
+- `API_MAX_INPUT_LENGTH` (optional) - Maximum request size in character (`10000` by default)
 
 The entrypoint of the container is `["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers"]`. The
 default `CMD` is used to define logging configuration `["--log-config", "logging/logging.ini"]` which can be potentially

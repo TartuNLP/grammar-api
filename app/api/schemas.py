@@ -1,6 +1,8 @@
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
+
+from app import api_settings
 from . import Language
 
 
@@ -37,7 +39,8 @@ class GECRequest(BaseModel):
                                description="Input language ISO 2-letter code.")
     text: str = Field(...,
                       description="Original text input. May contain multiple sentences.",
-                      example="Aitähh!")
+                      example="Aitähh!",
+                      max_length=api_settings.max_input_length)
 
 
 class GECResult(BaseModel):

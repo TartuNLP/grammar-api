@@ -13,4 +13,12 @@ class MQSettings(BaseSettings):
         env_prefix = 'mq_'
 
 
+class APISettings(BaseSettings):
+    max_input_length: int = 10000
+
+    class Config:
+        env_prefix = 'api_'
+
+
 mq_settings = MQSettings()
+api_settings = APISettings()
