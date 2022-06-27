@@ -20,6 +20,15 @@ The following environment variables should be specified when running the contain
 - `API_LANGUAGES` (optional) - a comma-separated list of supported language using 2-letter language codes (`et` by
   default)
 
+Build-time arguments / environment variables:
+- `API_VERSION` - A semantic version number, displayed in the docs.
+
+Endpoints for healthcheck probes:
+
+- `/health/startup`
+- `/health/readiness`
+- `/health/liveness`
+
 The entrypoint of the container
 is `["uvicorn", "app:app", "--host", "0.0.0.0", "--proxy-headers", "--log-config", "logging/logging.ini"]`. `CMD` can be
 used to define additional [Uvicorn parameters](https://www.uvicorn.org/deployment/). For

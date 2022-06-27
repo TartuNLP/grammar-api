@@ -7,13 +7,14 @@ class MQSettings(BaseSettings):
     username: str = 'guest'
     password: str = 'guest'
     exchange: str = 'grammar'
-    timeout: int = 30000
+    timeout: int = 60000
 
     class Config:
         env_prefix = 'mq_'
 
 
 class APISettings(BaseSettings):
+    version: str
     max_input_length: int = 10000
     languages: str = "et"  # comma-separated list of 2-letter codes
 

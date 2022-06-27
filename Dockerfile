@@ -22,6 +22,9 @@ RUN pip install --user -r requirements.txt && \
 
 COPY --chown=app:app . .
 
+ARG API_VERSION
+ENV API_VERSION=$API_VERSION
+
 EXPOSE 8000
 
 ENTRYPOINT ["uvicorn", "app:app", "--host", "0.0.0.0", "--proxy-headers", "--log-config", "logging/logging.ini"]
