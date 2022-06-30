@@ -84,10 +84,11 @@ class MQConnector:
         LOGGER.info(f"Sent request: {{id: {correlation_id}, routing_key: {mq_settings.exchange}.{language}}}")
         LOGGER.debug(f"Request {correlation_id} content: {{id: {correlation_id}}}")
         try:
-            response = await asyncio.wait_for(future, timeout=mq_settings.timeout/1000)
+            response = await asyncio.wait_for(future, timeout=mq_settings.timeout)
         except asyncio.TimeoutError:
             LOGGER.info(f"Request timed out: {{id: {message.correlation_id}}}")
-            self.futures.pop(message.correlation_id)
+            future = self.futures.pop(message.correlation_id)
+            future.cancel()
             raise HTTPException(408)
 
         return response

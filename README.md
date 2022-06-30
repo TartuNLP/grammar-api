@@ -14,7 +14,7 @@ The following environment variables should be specified when running the contain
 - `MQ_PASSWORD` - RabbitMQ user password
 - `MQ_HOST` - RabbitMQ host
 - `MQ_PORT` (optional) - RabbitMQ port (`5672` by default)
-- `MQ_TIMEOUT` (optional) - Message timeout in milliseconds (`300000` by default)
+- `MQ_TIMEOUT` (optional) - Message timeout in seconds (`60` by default).
 - `MQ_EXCHANGE` (optional) - RabbitMQ exchange name (`grammar` by default)
 - `API_MAX_INPUT_LENGTH` (optional) - Maximum request size in character (`10000` by default)
 - `API_LANGUAGES` (optional) - a comma-separated list of supported language using 2-letter language codes (`et` by

@@ -7,7 +7,7 @@ class MQSettings(BaseSettings):
     username: str = 'guest'
     password: str = 'guest'
     exchange: str = 'grammar'
-    timeout: int = 60000
+    timeout: int = 60
 
     class Config:
         env_prefix = 'mq_'
