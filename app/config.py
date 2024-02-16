@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseSettings, validator
 
 
@@ -14,9 +15,9 @@ class MQSettings(BaseSettings):
 
 
 class APISettings(BaseSettings):
-    version: str
     max_input_length: int = 10000
     languages: str = "et"  # comma-separated list of 2-letter codes
+    version: Optional[str]
 
     @validator('languages')
     def list_languages(cls, v):

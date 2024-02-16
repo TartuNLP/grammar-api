@@ -7,7 +7,7 @@ from app.api import gec_router
 
 app = FastAPI(
     title="Grammatical Error Correction",
-    version=api_settings.version,
+    version=api_settings.version if api_settings.version else "dev",
     description="A service that performs automatic grammatical error correction."
 )
 
@@ -15,8 +15,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
-    allow_headers=["*"],
-    allow_credentials=True,
+    allow_headers=["*"]
 )
 
 
@@ -42,7 +41,7 @@ async def shutdown():
 @app.get('/health/startup', include_in_schema=False)
 @app.get('/health/liveness', include_in_schema=False)
 async def health_check():
-    # Returns 200 the connection to RabbitMQ is up
+    # Returns 200 if connection to RabbitMQ is up
     if mq_connector.channel is None or mq_connector.channel.is_closed:
         raise HTTPException(500)
     return "OK"
