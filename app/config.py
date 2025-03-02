@@ -18,6 +18,7 @@ class APISettings(BaseSettings):
 
     class Config:
         env_prefix = 'api_'
+        env_file = '.env'
 
 
 api_settings = APISettings()
