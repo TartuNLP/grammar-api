@@ -7,6 +7,7 @@ from estnltk import Text
 
 from app.config import api_settings
 from app.utils.sentence_aligner import vii_kokku_kirjandid
+from app.utils.position_finder import find_correction_spans
 
 LOGGER = logging.getLogger(__name__)
 
@@ -112,7 +113,6 @@ class GrammarService:
         return explanations
     
     def process_request(self, text: str, language: str) -> Dict:
-        """Process request and return spans with corrections"""
         corrected_text = self.correct_text(text)
         corrected_text = self.truncate_hallucinated_text(text, corrected_text)
 
@@ -123,80 +123,23 @@ class GrammarService:
             }
 
         corrections = []
-        orig_pos = 0 
-
+        pos = 0 
         aligned_text = vii_kokku_kirjandid(text, corrected_text) or [(text, corrected_text)]
 
         for orig_sent, corr_sent in aligned_text:
-            sent_start = text.find(orig_sent, orig_pos)
+            sent_start = text.find(orig_sent, pos)
             if sent_start == -1:
                 continue
-            
-            orig_pos = sent_start
-            tokens_orig = orig_sent.split()
-            tokens_corr = corr_sent.split()
-            
-            i = j = 0 
-            while i < len(tokens_orig) or j < len(tokens_corr):
-                while (i < len(tokens_orig) and j < len(tokens_corr) and 
-                       tokens_orig[i] == tokens_corr[j]):
-                    orig_pos += len(tokens_orig[i]) + (1 if i < len(tokens_orig) - 1 else 0) 
-                    i += 1
-                    j += 1
-                
-                if i >= len(tokens_orig) and j >= len(tokens_corr):
-                    break
-                
-                start_pos = orig_pos
-                
-                end_i = i
-                end_j = j
-                matched = False
-                
-                while end_i < len(tokens_orig) and not matched:
-                    for k in range(j, min(len(tokens_corr), j + 3)):
-                        if end_i + 1 < len(tokens_orig):
-                            if ' '.join(tokens_orig[end_i:end_i+1]) == ' '.join(tokens_corr[k:k+1]):
-                                end_j = k
-                                matched = True
-                                break
-                    if not matched:
-                        end_i += 1
-                
-                if not matched:
-                    end_i = len(tokens_orig)
-                    end_j = len(tokens_corr)
-                
-                if i < len(tokens_orig):
-                    value = ' '.join(tokens_orig[i:end_i])
-                    replacement = ' '.join(tokens_corr[j:end_j]) if j < end_j else None
-                    
-                    if value.strip():
-                        end_pos = start_pos + len(value)
-                        corrections.append({
-                            "span": {
-                                "start": start_pos,
-                                "end": end_pos,
-                                "value": value
-                            },
-                            "replacements": [
-                                {"value": replacement}
-                            ] if replacement and replacement.strip() else []
-                        })
-                        orig_pos = end_pos
-                
-                i = end_i
-                j = end_j
-                
-                if i < len(tokens_orig):
-                    orig_pos += 1
 
-            orig_pos = sent_start + len(orig_sent)
+            pos = sent_start
+            spans, pos = find_correction_spans(orig_sent, corr_sent, pos)
+            corrections.extend(spans)
+            pos = sent_start + len(orig_sent)
 
         return {
             "corrections": corrections,
             "corrected_text": corrected_text
-        }
+    }
 
     def process_request_v2(self, text: str, language: str) -> Dict:
         try:
