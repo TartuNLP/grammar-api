@@ -21,8 +21,38 @@ The following environment variables can be configured:
 
 ### API Endpoints
 
-#### Main Endpoint
-- `POST /` - Submit text for grammar correction
+#### Root Endpoint
+- `POST /` - Submit text for grammar correction with span-based corrections
+  - Request body:
+    ```json
+    {
+      "language": "et",
+      "text": "Your text here"
+    }
+    ```
+  - Response format:
+    ```json
+    {
+      "corrections": [
+        {
+          "span": {
+            "start": 0,
+            "end": 13,
+            "value": "original text"
+          },
+          "replacements": [
+            {
+              "value": "corrected text"
+            }
+          ]
+        }
+      ],
+      "corrected_text": "Full corrected text"
+    }
+    ```
+
+#### V2 Endpoint
+- `POST /v2` - Submit text for grammar correction with detailed explanations
   - Request body:
     ```json
     {
