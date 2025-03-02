@@ -16,8 +16,8 @@ The following environment variables can be configured:
 - `API_GEC_URL` (optional) - URL for the grammar correction service (`https://mgc.hpc.ut.ee/v1/completions` by default)
 - `API_M2_URL` (optional) - URL for the M2 format generation service (`http://artemis20.hpc.ut.ee:8000/v1/completions` by default)
 - `API_EXPLANATION_URL` (optional) - URL for the explanation service (`http://artemis20.hpc.ut.ee:8001/v1/completions` by default)
-- `API_AUTH_USERNAME` - Username for service authentication
-- `API_AUTH_PASSWORD` - Password for service authentication
+- `API_AUTH_USERNAME` - Username for models endpoints authentication
+- `API_AUTH_PASSWORD` - Password for models endpoints authentication
 
 ### API Endpoints
 
