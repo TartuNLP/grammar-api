@@ -1,24 +1,23 @@
-FROM python:3.10-alpine
+FROM python:3.10-slim
 
 # Install system dependencies
-RUN apk update && \
-    apk add --no-cache \
-        gcc \
-        libffi-dev \
-        musl-dev \
-        git
+RUN apt-get update && apt-get install -y \
+    libffi-dev \
+    musl-dev \
+    git \
+    build-essential \
+    swig \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV PYTHONIOENCODING=utf-8
 WORKDIR /app
 
-RUN addgroup -S app && adduser -S -D -G app app && chown -R app:app /app
-
+RUN useradd -m app
 USER app
 ENV PATH="/home/app/.local/bin:${PATH}"
 
 COPY --chown=app:app requirements.txt .
-RUN pip install --user -r requirements.txt && \
-    rm requirements.txt
+RUN pip install --user --no-cache-dir -r requirements.txt
 
 COPY --chown=app:app . .
 

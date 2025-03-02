@@ -48,6 +48,13 @@ class GECRequest(BaseModel):
         return v
 
 
+class CorrectionEntry(BaseModel):
+    original: str = Field(..., description="Original sentence")
+    corrected: str = Field(..., description="Corrected sentence")
+    correction_log: str = Field(..., description="Detailed correction log for the sentence")
+    explanations: str = Field(..., description="Explanation for the corrections in the sentence")
+
+
 class GECResult(BaseModel):
     corrections: List[Correction] = Field(...,
                                           description="List of suggested corrections.")
@@ -55,3 +62,11 @@ class GECResult(BaseModel):
                                 description="[DEPRECATED] Suggested value for the correct output. "
                                             "This value will be deprecated in future releases.",
                                 example="Aitäh!")
+
+class GECResult_v2(BaseModel):
+    corrections: List[CorrectionEntry] = Field(..., description="List of sentence corrections")
+
+class ExplanationResponse(BaseModel):
+    original_text: str = Field(..., description="Original text")
+    corrected_text: str = Field(..., description="Corrected text")
+    explanation: str = Field(..., description="Explanation for the correction")
