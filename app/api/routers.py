@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Header, HTTPException, status, Response
 
 from . import GECResult, GECRequest
-from app import mq_connector
+from app.services import grammar_service
 
 gec_router = APIRouter()
-
 
 @gec_router.post('/', response_model=GECResult, description="Submit a GEC request.")
 async def grammar(body: GECRequest, response: Response, content_type: str = Header(..., include_in_schema=False)):
@@ -13,6 +12,6 @@ async def grammar(body: GECRequest, response: Response, content_type: str = Head
             status.HTTP_422_UNPROCESSABLE_ENTITY
         )
 
-    result = await mq_connector.publish_request(body, body.language)
+    result = grammar_service.process_request(body.text, body.language)
     response.headers['Content-Disposition'] = 'attachment; filename="api.json"'
     return result

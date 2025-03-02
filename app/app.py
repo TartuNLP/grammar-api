@@ -1,8 +1,8 @@
 import logging
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from app import mq_connector, api_settings
+from app import api_settings
 from app.api import gec_router
 
 app = FastAPI(
@@ -18,7 +18,6 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-
 @app.middleware("http")
 async def add_cache_control_header(request: Request, call_next):
     response = await call_next(request)
@@ -26,26 +25,11 @@ async def add_cache_control_header(request: Request, call_next):
     response.headers["Pragma"] = "no-cache"
     return response
 
-
-@app.on_event("startup")
-async def startup():
-    await mq_connector.connect()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await mq_connector.disconnect()
-
-
 @app.get('/health/readiness', include_in_schema=False)
 @app.get('/health/startup', include_in_schema=False)
 @app.get('/health/liveness', include_in_schema=False)
 async def health_check():
-    # Returns 200 if connection to RabbitMQ is up
-    if mq_connector.channel is None or mq_connector.channel.is_closed:
-        raise HTTPException(500)
     return "OK"
-
 
 class EndpointFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:

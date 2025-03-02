@@ -1,3 +1,2 @@
-from .config import mq_settings, api_settings
-from .mq_connector import mq_connector
+from .config import api_settings
 from .app import app
