@@ -77,9 +77,9 @@ jobs:
           build-args: |
             API_VERSION=${{steps.get_version.outputs.version-without-v}}
 
-      - name: Generate SBOM
-        uses: anchore/sbom-action@v0.11.0
-        with:
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:${{steps.get_version.outputs.version-without-v}}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          format: cyclonedx-json
+#      - name: Generate SBOM
+#        uses: anchore/sbom-action@v0.11.0
+#        with:
+#          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_LOWER }}:${{steps.get_version.outputs.version-without-v}}
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#          format: cyclonedx-json
