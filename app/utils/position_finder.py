@@ -51,7 +51,7 @@ def find_correction_spans(orig_sent: str, corr_sent: str, init_pos: int) -> (lis
                     },
                     "replacements": [
                         {"value": replacement}
-                    ] if replacement and replacement.strip() else []
+                    ]
                 })
                 pos = end_pos
 
