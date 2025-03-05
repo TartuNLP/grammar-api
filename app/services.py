@@ -11,6 +11,8 @@ from app.utils.position_finder import find_correction_spans
 
 LOGGER = logging.getLogger(__name__)
 
+HTTP_TIMEOUT = httpx.Timeout(60.0)
+
 class GrammarService:
     def __init__(self):
         self.auth = (api_settings.auth_username, api_settings.auth_password)
@@ -22,7 +24,7 @@ class GrammarService:
             "max_tokens": 1000,
             "temperature": 1
         }
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
             response = await client.post(
                 api_settings.gec_url,
                 auth=self.auth, 
@@ -49,7 +51,7 @@ class GrammarService:
             "max_tokens": 200,
             "temperature": 0.8
         }
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
             response = await client.post(
                 api_settings.m2_url,
                 headers={"Content-Type": "application/json"},
@@ -85,7 +87,7 @@ class GrammarService:
             "max_tokens": 400,
             "temperature": 0.9
         }
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
             response = await client.post(
                 api_settings.explanation_url,
                 headers={"Content-Type": "application/json"},
@@ -126,7 +128,7 @@ class GrammarService:
         }
 
     async def process_request_v2(self, text: str, language: str) -> Dict:
-        # try:
+        try:
             corrected_text = await self.correct_text(text)
             corrected_text = self.truncate_hallucinated_text(text, corrected_text)
 
@@ -142,9 +144,9 @@ class GrammarService:
 
             return {"corrections": results}
 
-        # except Exception as e:
-        #     LOGGER.error(f"Error processing request: {str(e)}")
-        #     raise HTTPException(status_code=500, detail="Error processing grammar correction request")
+        except Exception as e:
+            LOGGER.error(f"Error processing request: {str(e)}")
+            raise HTTPException(status_code=500, detail="Error processing grammar correction request")
 
     # Helper functions
     def _no_corrections_response(self, text: str) -> Dict:
