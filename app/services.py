@@ -87,30 +87,6 @@ class GrammarService:
             return response.json()["choices"][0]["text"].strip()
         raise HTTPException(status_code=response.status_code, detail="Error in Explanation API")
 
-    def generate_explanations(self, original: str, corrected: str, 
-                            correction_log: str, numbered_corrections: List[str]) -> List[str]:
-        """Generate explanations for each correction."""
-        explanations = []
-        correction_log_str = "\n".join(numbered_corrections)
-        
-        for i, correction in enumerate(numbered_corrections):
-            conversion_pattern = r'^[^:]*:\s*(.*)$'
-            match = re.search(conversion_pattern, correction)
-            
-            if match:
-                conversion = match.group(1)
-                if "->" not in conversion:
-                    conversion = correction[len(str(i+1))+2:]
-            else:
-                conversion = correction[len(str(i+1))+2:]
-                
-            explanation_input = f"Selgitus {i+1}: {conversion}"
-            explanation = self.explain_correction(
-                original, corrected, correction_log_str, explanation_input
-            )
-            explanations.append(f"{explanation_input}\n{explanation}")
-            
-        return explanations
     
     def process_request(self, text: str, language: str) -> Dict:
         corrected_text = self.correct_text(text)
