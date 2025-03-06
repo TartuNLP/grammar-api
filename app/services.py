@@ -1,7 +1,7 @@
 import logging
 import re
 from typing import Dict, List
-import requests
+import httpx
 from fastapi import HTTPException
 from estnltk import Text
 
@@ -11,20 +11,26 @@ from app.utils.position_finder import find_correction_spans
 
 LOGGER = logging.getLogger(__name__)
 
+HTTP_TIMEOUT = httpx.Timeout(60.0)
+
 class GrammarService:
     def __init__(self):
         self.auth = (api_settings.auth_username, api_settings.auth_password)
 
-    def correct_text(self, input_text: str) -> str:
+    async def correct_text(self, input_text: str) -> str:
         data = {
             "model": "tartuNLP/Llammas-base-p1-GPT-4o-human-error-mix-paragraph-GEC",
             "prompt": f"### Instruction:\nReply with a corrected version of the input essay in Estonian with all grammatical and spelling errors fixed. If there are no errors, reply with a copy of the original essay.\n\n### Input:\n{input_text}\n\n### Response:\n",
             "max_tokens": 1000,
             "temperature": 1
         }
-        response = requests.post(api_settings.gec_url, auth=self.auth, 
-                               headers={"Content-Type": "application/json"}, 
-                               json=data)
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
+            response = await client.post(
+                api_settings.gec_url,
+                auth=self.auth, 
+                headers={"Content-Type": "application/json"}, 
+                json=data, 
+            )
         if response.status_code == 200:
             return response.json()["choices"][0]["text"].strip()
         raise HTTPException(status_code=response.status_code, detail="Error in GEC API")
@@ -38,16 +44,19 @@ class GrammarService:
             return " ".join([s.enclosing_text for s in corrected_text_obj.sentences[:len(input_text_obj.sentences)]])
         return corrected
 
-    def generate_correction_log(self, original: str, corrected: str) -> str:
+    async def generate_correction_log(self, original: str, corrected: str) -> str:
         data = {
             "model": "tartuNLP/Llammas-base-p1-GPT-4o-human-error-pseudo-m2",
             "prompt": f"### Instruction:\nSa võrdled kahte eestikeelset lauset: keeleõppija kirjutatud algne lause ja parandatud lause. Genereeri vea kaupa paranduste loend.\n\n### Input:\nAlgne tekst: {original}\n\nParandatud tekst: {corrected}\n\n### Response:\n",
             "max_tokens": 200,
             "temperature": 0.8
         }
-        response = requests.post(api_settings.m2_url, 
-                               headers={"Content-Type": "application/json"}, 
-                               json=data)
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
+            response = await client.post(
+                api_settings.m2_url,
+                headers={"Content-Type": "application/json"},
+                json=data,
+            )
         if response.status_code == 200:
             return response.json()["choices"][0]["text"].strip()
         raise HTTPException(status_code=response.status_code, detail="Error in M2 API")
@@ -71,49 +80,26 @@ class GrammarService:
         
         return numbered_lines
 
-    def explain_correction(self, original: str, corrected: str, correction_details: str, specific_correction: str) -> str:
+    async def explain_correction(self, original: str, corrected: str, correction_details: str, specific_correction: str) -> str:
         data = {
             "model": "tartuNLP/Llammas-base-p1-GPT-4o-human-error-explain-from-pseudo-m2",
             "prompt": f"### Instruction:\nSa võrdled kahte eestikeelset lauset: keeleõppija kirjutatud algne lause ja parandatud lause. Selgita ühte parandust.\n\n### Input:\nAlgne lause: {original}\n\nParandatud lause: {corrected}\n\nParandused:\n{correction_details}\n\n{specific_correction}\n\n### Response:\n1. Pikem selgitus (keeleline põhjendus, miks parandust vaja on).\n2. Lühike selgitus (lihtsustatud, et keeleõppija saaks paremini aru).\n3. Vealiik (nt. käändevorm, tegusõna vorm, õigekiri).",
             "max_tokens": 400,
             "temperature": 0.9
         }
-        response = requests.post(
-            api_settings.explanation_url,
-            headers={"Content-Type": "application/json"},
-            json=data
-        )
+        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
+            response = await client.post(
+                api_settings.explanation_url,
+                headers={"Content-Type": "application/json"},
+                json=data,
+            )
         if response.status_code == 200:
             return response.json()["choices"][0]["text"].strip()
         raise HTTPException(status_code=response.status_code, detail="Error in Explanation API")
 
-    def generate_explanations(self, original: str, corrected: str, 
-                            correction_log: str, numbered_corrections: List[str]) -> List[str]:
-        """Generate explanations for each correction."""
-        explanations = []
-        correction_log_str = "\n".join(numbered_corrections)
-        
-        for i, correction in enumerate(numbered_corrections):
-            conversion_pattern = r'^[^:]*:\s*(.*)$'
-            match = re.search(conversion_pattern, correction)
-            
-            if match:
-                conversion = match.group(1)
-                if "->" not in conversion:
-                    conversion = correction[len(str(i+1))+2:]
-            else:
-                conversion = correction[len(str(i+1))+2:]
-                
-            explanation_input = f"Selgitus {i+1}: {conversion}"
-            explanation = self.explain_correction(
-                original, corrected, correction_log_str, explanation_input
-            )
-            explanations.append(f"{explanation_input}\n{explanation}")
-            
-        return explanations
-    
-    def process_request(self, text: str, language: str) -> Dict:
-        corrected_text = self.correct_text(text)
+
+    async def process_request(self, text: str, language: str) -> Dict:
+        corrected_text = await self.correct_text(text)
         corrected_text = self.truncate_hallucinated_text(text, corrected_text)
 
         if text == corrected_text:
@@ -139,11 +125,11 @@ class GrammarService:
         return {
             "corrections": corrections,
             "corrected_text": corrected_text
-    }
+        }
 
-    def process_request_v2(self, text: str, language: str) -> Dict:
+    async def process_request_v2(self, text: str, language: str) -> Dict:
         try:
-            corrected_text = self.correct_text(text)
+            corrected_text = await self.correct_text(text)
             corrected_text = self.truncate_hallucinated_text(text, corrected_text)
 
             # If no corrections were made to the whole text, return early
@@ -154,7 +140,7 @@ class GrammarService:
             results = []
 
             for input_sentence, corrected_sentence in aligned_text:
-                results.append(self._process_sentence(input_sentence, corrected_sentence))
+                results.append(await self._process_sentence(input_sentence, corrected_sentence))
 
             return {"corrections": results}
 
@@ -176,7 +162,7 @@ class GrammarService:
             ]
         }
 
-    def _process_sentence(self, input_sentence: str, corrected_sentence: str) -> Dict:
+    async def _process_sentence(self, input_sentence: str, corrected_sentence: str) -> Dict:
         """Processes a single sentence and generates correction logs and explanations."""
         if input_sentence == corrected_sentence:
             return {
@@ -186,29 +172,31 @@ class GrammarService:
                 "explanations": "Parandused puuduvad",
             }
 
-        correction_log = self.generate_correction_log(input_sentence, corrected_sentence)
+        correction_log = await self.generate_correction_log(input_sentence, corrected_sentence)
         correction_entries = self.prepare_correction_log(correction_log)
         
         log_string = "Parandused:\n" + "\n".join(correction_entries)
-        explanations = [
-            self._generate_explanation(input_sentence, corrected_sentence, log_string, entry, i)
-            for i, entry in enumerate(correction_entries)
-        ]
+        explanations_list = []
+        for i, entry in enumerate(correction_entries):
+            explanation = await self._generate_explanation(input_sentence, corrected_sentence, log_string, entry, i)
+            explanations_list.append(explanation)
+
+        explanations = "\n\n".join(explanations_list)
 
         return {
             "original": input_sentence,
             "corrected": corrected_sentence,
             "correction_log": log_string,
-            "explanations": "\n\n".join(explanations),
+            "explanations": explanations,
         }
 
-    def _generate_explanation(self, input_sentence: str, corrected_sentence: str, log_string: str, correction_entry: str, index: int) -> str:
+    async def _generate_explanation(self, input_sentence: str, corrected_sentence: str, log_string: str, correction_entry: str, index: int) -> str:
         """Extracts the explanation for a correction entry."""
         match = re.search(r'^[^:]*:\s*(.*)$', correction_entry)
         conversion = match.group(1) if match else correction_entry[len(str(index + 1)) + 2:]
 
         explanation_input = f"Selgitus {index + 1}: {conversion}"
-        explanation = self.explain_correction(input_sentence, corrected_sentence, log_string, explanation_input)
+        explanation = await self.explain_correction(input_sentence, corrected_sentence, log_string, explanation_input)
 
         return f"{explanation_input}\n{explanation}"
 
