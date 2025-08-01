@@ -1,23 +1,25 @@
 # Grammatical Error Correction API
 
-An API for using the grammatical error correction (GEC) service.
+An API for using the grammatical error correction (GEC) service with Ollama backend.
 
 ### Setup
 
-The API can be deployed using Docker. It acts as a middleware between clients and various GEC-related services:
-- Grammar correction service
-- M2 format generation service
-- Explanation generation service
+The API can be deployed using Docker. It acts as a middleware between clients and Ollama-hosted GEC-related models:
+- Grammar correction service (GEC)
+- Grammar error detection service (GED)  
+- Grammar error explanation service (GEE)
 
 The following environment variables can be configured:
 
+#### Ollama Configuration
+- `API_GEC_OLLAMA_URL` (optional) - URL for GEC Ollama server (`http://localhost:11434` by default)
+- `API_GEE_OLLAMA_URL` (optional) - URL for GEE Ollama server (`http://localhost:11435` by default)
+- `API_GED_OLLAMA_URL` (optional) - URL for GED Ollama server (`http://localhost:11436` by default)
+- `API_GEC_MODEL` (optional) - Model name for grammar correction (`gec` by default)
+- `API_GEE_MODEL` (optional) - Model name for error explanations (`gee` by default)
+- `API_GED_MODEL` (optional) - Model name for error detection/logging (`ged` by default)
 - `API_MAX_INPUT_LENGTH` (optional) - Maximum request size in characters (`10000` by default)
 - `API_LANGUAGES` (optional) - A comma-separated list of supported languages using 2-letter language codes (`et` by default)
-- `API_GEC_URL` (optional) - URL for the grammar correction service (`https://mgc.hpc.ut.ee/v1/completions` by default)
-- `API_M2_URL` (optional) - URL for the M2 format generation service (`http://artemis20.hpc.ut.ee:8000/v1/completions` by default)
-- `API_EXPLANATION_URL` (optional) - URL for the explanation service (`http://artemis20.hpc.ut.ee:8001/v1/completions` by default)
-- `API_AUTH_USERNAME` - Username for models endpoints authentication
-- `API_AUTH_PASSWORD` - Password for models endpoints authentication
 
 ### API Endpoints
 

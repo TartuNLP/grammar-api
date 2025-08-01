@@ -5,12 +5,18 @@ from pydantic import BaseSettings, validator
 class APISettings(BaseSettings):
     max_input_length: int = 10000
     languages: str = "et"  # comma-separated list of 2-letter codes
-    gec_url: str = "https://mgc.hpc.ut.ee/v1/completions"
-    m2_url: str = "http://artemis20.hpc.ut.ee:8000/v1/completions"
-    explanation_url: str = "http://artemis20.hpc.ut.ee:8001/v1/completions"
-    auth_username: str
-    auth_password: str
-    version: Optional[str]
+    
+    # Ollama server configuration - Individual servers for each model
+    gec_ollama_url: str = "http://localhost:11434"  # Grammar Error Correction server
+    gee_ollama_url: str = "http://localhost:11435"  # Grammar Error Explanation server
+    ged_ollama_url: str = "http://localhost:11436"  # Grammar Error Detection server
+    
+    # Model names for different tasks
+    gec_model: str = "gec"  # Grammar Error Correction model
+    gee_model: str = "gee"  # Grammar Error Explanation model  
+    ged_model: str = "ged"  # Grammar Error Detection model
+    
+    version: Optional[str] = None
 
     @validator('languages')
     def list_languages(cls, v):

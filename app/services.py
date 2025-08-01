@@ -15,25 +15,42 @@ HTTP_TIMEOUT = httpx.Timeout(60.0)
 
 class GrammarService:
     def __init__(self):
-        self.auth = (api_settings.auth_username, api_settings.auth_password)
+        self.gec_ollama_url = api_settings.gec_ollama_url
+        self.gee_ollama_url = api_settings.gee_ollama_url
+        self.ged_ollama_url = api_settings.ged_ollama_url
+        self.gec_model = api_settings.gec_model
+        self.gee_model = api_settings.gee_model
+        self.ged_model = api_settings.ged_model
 
-    async def correct_text(self, input_text: str) -> str:
+    async def _make_ollama_request(self, ollama_url: str, model: str, prompt: str, max_tokens: int = 1000, temperature: float = 0.7) -> str:
+        """Make a request to Ollama API"""
         data = {
-            "model": "tartuNLP/Llammas-base-p1-GPT-4o-human-error-mix-paragraph-GEC",
-            "prompt": f"### Instruction:\nReply with a corrected version of the input essay in Estonian with all grammatical and spelling errors fixed. If there are no errors, reply with a copy of the original essay.\n\n### Input:\n{input_text}\n\n### Response:\n",
-            "max_tokens": 1000,
-            "temperature": 1
+            "model": model,
+            "prompt": prompt,
+            "stream": False,
+            "options": {
+                "num_predict": max_tokens,
+                "temperature": temperature
+            }
         }
+        
         async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
             response = await client.post(
-                api_settings.gec_url,
-                auth=self.auth, 
+                f"{ollama_url}/api/generate",
                 headers={"Content-Type": "application/json"}, 
                 json=data, 
             )
+        
         if response.status_code == 200:
-            return response.json()["choices"][0]["text"].strip()
-        raise HTTPException(status_code=response.status_code, detail="Error in GEC API")
+            result = response.json()
+            return result.get("response", "").strip()
+        else:
+            LOGGER.error(f"Ollama API error at {ollama_url}: {response.status_code} - {response.text}")
+            raise HTTPException(status_code=response.status_code, detail=f"Error in Ollama API at {ollama_url}: {response.text}")
+
+    async def correct_text(self, input_text: str) -> str:
+        prompt = f"### Instruction:\nReply with a corrected version of the input essay in Estonian with all grammatical and spelling errors fixed. If there are no errors, reply with a copy of the original essay.\n\n### Input:\n{input_text}\n\n### Response:\n"
+        return await self._make_ollama_request(self.gec_ollama_url, self.gec_model, prompt, max_tokens=1000, temperature=1.0)
 
     def truncate_hallucinated_text(self, original: str, corrected: str) -> str:
         """Truncate corrected text if it has more sentences than the original."""
@@ -45,21 +62,8 @@ class GrammarService:
         return corrected
 
     async def generate_correction_log(self, original: str, corrected: str) -> str:
-        data = {
-            "model": "tartuNLP/Llammas-base-p1-GPT-4o-human-error-pseudo-m2",
-            "prompt": f"### Instruction:\nSa võrdled kahte eestikeelset lauset: keeleõppija kirjutatud algne lause ja parandatud lause. Genereeri vea kaupa paranduste loend.\n\n### Input:\nAlgne tekst: {original}\n\nParandatud tekst: {corrected}\n\n### Response:\n",
-            "max_tokens": 200,
-            "temperature": 0.8
-        }
-        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
-            response = await client.post(
-                api_settings.m2_url,
-                headers={"Content-Type": "application/json"},
-                json=data,
-            )
-        if response.status_code == 200:
-            return response.json()["choices"][0]["text"].strip()
-        raise HTTPException(status_code=response.status_code, detail="Error in M2 API")
+        prompt = f"### Instruction:\nSa võrdled kahte eestikeelset lauset: keeleõppija kirjutatud algne lause ja parandatud lause. Genereeri vea kaupa paranduste loend.\n\n### Input:\nAlgne tekst: {original}\n\nParandatud tekst: {corrected}\n\n### Response:\n"
+        return await self._make_ollama_request(self.ged_ollama_url, self.ged_model, prompt, max_tokens=200, temperature=0.8)
 
     def prepare_correction_log(self, correction_log: str) -> List[str]:
         """Prepare and number the correction log entries."""
@@ -81,21 +85,8 @@ class GrammarService:
         return numbered_lines
 
     async def explain_correction(self, original: str, corrected: str, correction_details: str, specific_correction: str) -> str:
-        data = {
-            "model": "tartuNLP/Llammas-base-p1-GPT-4o-human-error-explain-from-pseudo-m2",
-            "prompt": f"### Instruction:\nSa võrdled kahte eestikeelset lauset: keeleõppija kirjutatud algne lause ja parandatud lause. Selgita ühte parandust.\n\n### Input:\nAlgne lause: {original}\n\nParandatud lause: {corrected}\n\nParandused:\n{correction_details}\n\n{specific_correction}\n\n### Response:\n1. Pikem selgitus (keeleline põhjendus, miks parandust vaja on).\n2. Lühike selgitus (lihtsustatud, et keeleõppija saaks paremini aru).\n3. Vealiik (nt. käändevorm, tegusõna vorm, õigekiri).",
-            "max_tokens": 400,
-            "temperature": 0.9
-        }
-        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
-            response = await client.post(
-                api_settings.explanation_url,
-                headers={"Content-Type": "application/json"},
-                json=data,
-            )
-        if response.status_code == 200:
-            return response.json()["choices"][0]["text"].strip()
-        raise HTTPException(status_code=response.status_code, detail="Error in Explanation API")
+        prompt = f"### Instruction:\nSa võrdled kahte eestikeelset lauset: keeleõppija kirjutatud algne lause ja parandatud lause. Selgita ühte parandust.\n\n### Input:\nAlgne lause: {original}\n\nParandatud lause: {corrected}\n\nParandused:\n{correction_details}\n\n{specific_correction}\n\n### Response:\n1. Pikem selgitus (keeleline põhjendus, miks parandust vaja on).\n2. Lühike selgitus (lihtsustatud, et keeleõppija saaks paremini aru).\n3. Vealiik (nt. käändevorm, tegusõna vorm, õigekiri)."
+        return await self._make_ollama_request(self.gee_ollama_url, self.gee_model, prompt, max_tokens=400, temperature=0.9)
 
 
     async def process_request(self, text: str, language: str) -> Dict:
