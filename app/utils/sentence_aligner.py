@@ -2,6 +2,22 @@ from estnltk import Text
 import numpy as np
 
 
+def _get_sentences(text: str):
+    t = Text(text)
+    try:
+        return t.sentences
+    except Exception:
+        try:
+            t.tag_layer('sentences')
+            return t.sentences
+        except Exception:
+            class Span:
+                def __init__(self, start, end):
+                    self.start = start
+                    self.end = end
+            return [Span(0, len(text))]
+
+
 def lev(xs, ys):
     mem = np.full((len(xs) + 1, len(ys) + 1), -1)
 
@@ -278,7 +294,7 @@ def cut_hallucination(originaal, parandatud):
     # Kontrollib, kas paranduse lõpp sisaldab kohutavat hallutsineerimist
     # Tüüpiliselt rakendatav viimasele lausepaarile
     # Tagastab paari, kus parandatud osast on vajadusel lõpp maha lõigatud
-    sents = Text(parandatud).tag_layer().sentences
+    sents = _get_sentences(parandatud)
     hüpolaused = [parandatud[s.start:s.end] for s in sents]
     eelmine_kaugus = 1000
     cutoff = 5  # how much of slack is allowed
@@ -302,9 +318,9 @@ def vii_kokku_kirjandid(originaal, parandatud):
     # Tagastab listi, kus on liikmeteks lausepaaride tuple'id [("l1_orig", "l1_par. l2 par."),("l2_orig","l3_par")] jne
     ######
     # rida
-    sents = Text(originaal).tag_layer().sentences
+    sents = _get_sentences(originaal)
     kuldlaused = [originaal[s.start:s.end] for s in sents]
-    sents = Text(parandatud).tag_layer().sentences
+    sents = _get_sentences(parandatud)
     hüpolaused = [parandatud[s.start:s.end] for s in sents]
     lausepaarid = laused_paralleeli_lev(kuldlaused, hüpolaused)
     #print(lausepaarid)
