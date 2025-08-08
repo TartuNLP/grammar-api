@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, Field, validator
 
@@ -18,7 +18,7 @@ class Span(BaseModel):
 
 
 class Replacement(BaseModel):
-    value: Optional[str] = Field(None,
+    value: str | None = Field(None,
                                  description="Suggested replacement text, null in case the span should be deleted.",
                                  example="Aitäh!")
 

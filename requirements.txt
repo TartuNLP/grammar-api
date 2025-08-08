@@ -3,3 +3,4 @@ uvicorn==0.27.1
 pydantic[dotenv]<2.0.0
 estnltk==1.7.4
 httpx==0.28.1
+python-Levenshtein==0.25.1
